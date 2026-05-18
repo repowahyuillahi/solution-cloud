@@ -1,43 +1,55 @@
-# Dependencies
-node_modules/
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Sensitive data files (credentials, personal data)
-Fingerprint*.xlsx
-Fingerprint*.ods
-Absensi_*.xlsx
-attlog.dat
-Laporan_Absensi_All.csv
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
 
-# Database files (sensitive, per-environment)
-databases/
-*.sqlite
+# testing
+/coverage
 
-# Attendance data files (large, per-environment)
-data/
+# next.js
+/.next/
+/out/
 
-# Backups
-backups/
+# production
+/build
 
-# Uploaded files
-uploads/
-
-# Environment variables
-.env
-.env.local
-.env.production
-
-# Next.js
-.next/
-out/
-
-# OS files
-Thumbs.db
+# misc
 .DS_Store
+*.pem
 
-# IDE
-.vscode/
-*.swp
-
-# Logs
-*.log
+# debug
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# databases
+/databases/*.sqlite
+/databases/tenants/*.sqlite
+
+# tenant data files (.dat files downloaded per tenant)
+/data/
+
+# uploads & backups
+/uploads/
+/backups/
+
+# legacy CLI runtime artifacts
+/attlog.dat
+/legacy/data/
+
+# generated prisma clients
+/src/generated/

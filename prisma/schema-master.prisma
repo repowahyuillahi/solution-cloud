@@ -1,0 +1,51 @@
+// Master Database Schema (Platform-Level)
+// Stores tenant registry, platform owner accounts, and payment history.
+
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/master"
+}
+
+model Tenant {
+  id                    Int       @id @default(autoincrement())
+  companyName           String
+  slug                  String    @unique
+  adminEmail            String    @unique
+  adminPasswordHash     String
+  licenseCode           String    @unique
+  subscriptionStatus    String    @default("trial") // trial|active|expiring_soon|expired|suspended|archived
+  trialStartedAt        DateTime  @default(now())
+  subscriptionExpiresAt DateTime
+  dbPath                String // relative path to tenant SQLite file
+  logoUrl               String?
+  contactEmail          String?
+  contactPhone          String?
+  address               String?
+  customDomain          String?   @unique
+  isActivated           Boolean   @default(false)
+  lastActivityAt        DateTime  @default(now())
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  payments              PaymentHistory[]
+}
+
+model PlatformOwner {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model PaymentHistory {
+  id         Int      @id @default(autoincrement())
+  tenantId   Int
+  planType   String // 'monthly' | 'yearly'
+  amountIdr  Int
+  paidAt     DateTime @default(now())
+  validUntil DateTime
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+}

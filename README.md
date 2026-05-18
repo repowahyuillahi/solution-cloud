@@ -1,99 +1,36 @@
-# Solution Cloud - SaaS Absensi Multi-Tenant
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Platform SaaS multi-tenant untuk manajemen absensi berbasis fingerprint. Mengambil data dari mesin fingerprint via [solutioncloud.co.id](http://www.solutioncloud.co.id), mengolah data kehadiran, dan menghasilkan laporan lengkap dengan deteksi keterlambatan dan ketidakhadiran.
+## Getting Started
 
-## Fitur Utama
-
-- **Multi-Tenant** — Setiap perusahaan punya dashboard dan database terpisah
-- **Kelola Mesin Fingerprint** — CRUD mesin dengan SN dan password solutioncloud
-- **Kelola Karyawan** — CRUD + bulk import dari Excel, multi-cabang
-- **Auto Download Absensi** — Tarik data att_log.dat dari semua mesin sekaligus
-- **Laporan Absensi** — Jam masuk/pulang, status (Tepat Waktu/Telat/Tidak Masuk)
-- **Export** — Excel (.xlsx) dan PDF
-- **Notifikasi Otomatis** — Kirim laporan harian via WhatsApp, Email, atau Telegram
-- **Scheduling** — Jadwalkan download + kirim laporan otomatis
-- **Role-Based Access** — Superadmin, HRD, Resepsionis
-- **Docker Ready** — Deploy dengan docker-compose
-
-## Arsitektur
-
-```
-wflab.web.id/                    → Customer Portal (registrasi, billing, license)
-wflab.web.id/{tenant-slug}/      → Dashboard Aplikasi Absensi per tenant
-wflab.web.id/admin/              → Platform Owner Admin Panel
-```
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend + Backend | Next.js 14 (App Router) |
-| UI | shadcn/ui + Tailwind CSS |
-| Database | SQLite + Prisma ORM (1 DB per tenant) |
-| Auth | iron-session |
-| Validation | Zod |
-| Export | exceljs + pdfmake |
-| Containerization | Docker + docker-compose |
-
-## Quick Start (Development)
+First, run the development server:
 
 ```bash
-# Clone
-git clone https://github.com/repowahyuillahi/solution-cloud.git
-cd solution-cloud
-
-# Install dependencies
-npm install
-
-# Setup environment
-cp .env.example .env
-
-# Run database migrations
-npx prisma migrate dev
-
-# Start development server
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## Docker Deployment
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```bash
-# Build and run
-docker-compose up -d
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-# Migrasi ke server baru
-# 1. Copy volumes: databases/, data/, backups/, uploads/
-# 2. docker-compose up -d
-```
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Project Structure
+## Learn More
 
-```
-├── prisma/                    # Database schemas (master + tenant)
-├── src/
-│   ├── app/
-│   │   ├── (portal)/         # Customer Portal
-│   │   ├── admin/            # Platform Owner Admin
-│   │   ├── [slug]/           # Tenant Application Dashboard
-│   │   └── api/              # API Routes
-│   ├── lib/                  # Auth, DB, RBAC, validation
-│   ├── services/             # Business logic
-│   └── components/           # React components
-├── data/                     # .dat files per tenant (gitignored)
-├── databases/                # SQLite files (gitignored)
-├── docker-compose.yml
-├── Dockerfile
-└── .kiro/specs/              # Requirements & Design docs
-```
+To learn more about Next.js, take a look at the following resources:
 
-## Tenant Pertama
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-**CV TJAHAJA BARU** (slug: `tjahaja-baru`) — 34 cabang mesin fingerprint
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Status
+## Deploy on Vercel
 
-🚧 **In Development** — Spec & design selesai, implementasi dimulai.
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-## License
-
-Private - All rights reserved.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

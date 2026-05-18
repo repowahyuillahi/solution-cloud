@@ -1,0 +1,79 @@
+// Tenant Database Schema (Per-Tenant, Isolated)
+// One SQLite database per tenant. URL is set dynamically per request via env.
+
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/tenant"
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  username        String    @unique
+  passwordHash    String
+  role            String // 'Superadmin' | 'HRD' | 'Resepsionis'
+  failedAttempts  Int       @default(0)
+  lockedUntil     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  downloadHistory DownloadHistory[]
+}
+
+model Machine {
+  id                Int       @id @default(autoincrement())
+  kodeDealer        String    @unique
+  namaDealer        String
+  serialNumber      String    @unique
+  password          String
+  connectionStatus  String    @default("unknown")
+  lastDownloadAt    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  branchAssignments BranchAssignment[]
+  branchSchedule    BranchSchedule?
+}
+
+model Employee {
+  id                Int       @id @default(autoincrement())
+  kodeKaryawan      String    @unique
+  namaKaryawan      String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  branchAssignments BranchAssignment[]
+}
+
+model BranchAssignment {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  kodeDealer String
+  createdAt  DateTime @default(now())
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  machine    Machine  @relation(fields: [kodeDealer], references: [kodeDealer], onDelete: Cascade)
+
+  @@unique([employeeId, kodeDealer])
+}
+
+model BranchSchedule {
+  id               Int      @id @default(autoincrement())
+  kodeDealer       String   @unique
+  jamMasuk         String   @default("08:00")
+  toleranceMinutes Int      @default(5)
+  workDays         String   @default("1,2,3,4,5,6,7")
+  updatedAt        DateTime @updatedAt
+  machine          Machine  @relation(fields: [kodeDealer], references: [kodeDealer], onDelete: Cascade)
+}
+
+model DownloadHistory {
+  id            Int       @id @default(autoincrement())
+  triggeredById Int
+  totalMachines Int
+  successCount  Int
+  failedCount   Int
+  totalLogs     Int
+  startedAt     DateTime
+  completedAt   DateTime?
+  triggeredBy   User      @relation(fields: [triggeredById], references: [id])
+}
