@@ -149,50 +149,50 @@ Implementasi platform SaaS multi-tenant untuk manajemen absensi berbasis fingerp
     - **Property 22: Subscription/suspension status enforcement**
     - **Validates: Requirements 2.2, 3.5, 4.6, 10.6, 12.2-12.5, 13.3, 14.6**
 
-- [ ] 6. Tenant Application — Machine Management
-  - [~] 6.1 Implement Machine Management API (CRUD)
+- [x] 6. Tenant Application — Machine Management
+  - [x] 6.1 Implement Machine Management API (CRUD)
     - Create src/app/api/[slug]/machines/route.ts — GET list, POST create
     - Create src/app/api/[slug]/machines/[id]/route.ts — PUT update, DELETE remove
     - Enforce Superadmin-only access, validate with Zod
     - Handle unique serial number and kode dealer constraints
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7_
 
-  - [~] 6.2 Implement Machine Management UI
+  - [x] 6.2 Implement Machine Management UI
     - Create src/app/[slug]/(dashboard)/machines/page.tsx
     - Machine list table with connection status indicators
     - Add/Edit/Delete machine forms with confirmation dialog
     - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-- [ ] 7. Tenant Application — Employee Management
-  - [~] 7.1 Implement Employee Management API (CRUD + Import)
+- [x] 7. Tenant Application — Employee Management
+  - [x] 7.1 Implement Employee Management API (CRUD + Import)
     - Create src/app/api/[slug]/employees/route.ts — GET list (with filter), POST create
     - Create src/app/api/[slug]/employees/[id]/route.ts — PUT update, DELETE remove
     - Create src/app/api/[slug]/employees/import/route.ts — POST bulk import from Excel
     - Enforce Superadmin/HRD access, handle branch assignments
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.11_
 
-  - [~] 7.2 Implement Employee Import service
+  - [x] 7.2 Implement Employee Import service
     - Create src/services/employee-import.ts
     - Parse Excel (.xlsx/.xls) with exceljs
     - Validate rows, skip duplicates, collect errors
     - Return ImportResult summary (total, success, skipped, failed)
     - _Requirements: 4.8, 4.9, 4.10_
 
-  - [~] 7.3 Implement Employee Management UI
+  - [x] 7.3 Implement Employee Management UI
     - Create src/app/[slug]/(dashboard)/employees/page.tsx
     - Employee list with branch filter dropdown
     - Add/Edit/Delete forms with branch assignment multi-select
     - Excel import upload with progress and summary display
     - _Requirements: 4.1, 4.2, 4.3, 4.8, 4.9_
 
-  - [ ]* 7.4 Write property tests for employee operations
+  - [x]* 7.4 Write property tests for employee operations
     - **Property 5: Employee list sorting invariant**
     - **Property 6: Employee branch filter correctness**
     - **Property 7: Bulk operation summary consistency (import)**
     - **Property 8: Bulk import duplicate skipping**
     - **Validates: Requirements 4.2, 4.3, 4.9, 4.10**
 
-- [~] 8. Checkpoint - Ensure CRUD and auth tests pass
+- [x] 8. Checkpoint - Ensure CRUD and auth tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 9. Bulk Attendance Download
