@@ -30,12 +30,12 @@ export default function PortalLoginPage() {
       const res = await fetch("/api/portal/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username: email, password }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.message || "Login gagal. Periksa email dan password.");
+        setError(data.error?.message || "Login gagal. Periksa email dan password.");
         return;
       }
 

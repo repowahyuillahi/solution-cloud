@@ -28,6 +28,29 @@ import type { NextRequest } from "next/server";
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const host = request.headers.get("host") ?? "";
+
+  // -------------------------------------------------------------------------
+  // 0. Custom domain detection
+  //    If the Host header is not the primary domain (wflab.web.id or localhost),
+  //    set x-custom-domain header so API routes can resolve the tenant.
+  // -------------------------------------------------------------------------
+  const primaryDomains = ["wflab.web.id", "localhost", "127.0.0.1"];
+  const hostWithoutPort = host.split(":")[0];
+  const isCustomDomain = !primaryDomains.some(
+    (d) => hostWithoutPort === d || hostWithoutPort.endsWith(`.${d}`)
+  );
+
+  if (isCustomDomain && hostWithoutPort) {
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-custom-domain", hostWithoutPort);
+
+    // For custom domains, the entire site is the tenant's dashboard
+    // Route to the tenant context (resolved by API handlers via custom domain lookup)
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    });
+  }
 
   // -------------------------------------------------------------------------
   // 1. Static assets — pass through immediately

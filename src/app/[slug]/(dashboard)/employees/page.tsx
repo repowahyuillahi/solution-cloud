@@ -182,7 +182,7 @@ export default function EmployeesPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setFormError(data.message || "Gagal menambahkan karyawan.");
+        setFormError(data.error?.message || "Gagal menambahkan karyawan.");
         return;
       }
 
@@ -213,7 +213,7 @@ export default function EmployeesPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setFormError(data.message || "Gagal mengubah karyawan.");
+        setFormError(data.error?.message || "Gagal mengubah karyawan.");
         return;
       }
 
@@ -237,7 +237,7 @@ export default function EmployeesPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setFormError(data.message || "Gagal menghapus karyawan.");
+        setFormError(data.error?.message || "Gagal menghapus karyawan.");
         return;
       }
 
@@ -268,7 +268,7 @@ export default function EmployeesPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setImportError(data.message || "Gagal mengimpor data.");
+        setImportError(data.error?.message || "Gagal mengimpor data.");
         return;
       }
 

@@ -10,7 +10,9 @@
     "prisma:master:generate": "prisma generate --config=prisma.master.config.ts",
     "prisma:tenant:generate": "prisma generate --config=prisma.tenant.config.ts",
     "prisma:master:migrate": "prisma migrate dev --config=prisma.master.config.ts",
-    "prisma:tenant:migrate": "prisma migrate dev --config=prisma.tenant.config.ts"
+    "prisma:tenant:migrate": "prisma migrate dev --config=prisma.tenant.config.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -36,7 +38,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.0",
     "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^20",
+    "@types/node": "^20.19.41",
     "@types/pdfmake": "^0.3.3",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -47,6 +49,7 @@
     "shadcn": "^4.7.0",
     "tailwindcss": "^4.3.0",
     "tsx": "^4.22.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.6"
   }
 }

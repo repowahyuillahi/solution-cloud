@@ -66,7 +66,7 @@ export default function PortalBillingPage() {
         setMessage("Langganan berhasil diperpanjang!");
       } else {
         const data = await res.json();
-        setMessage(data.message || "Gagal berlangganan.");
+        setMessage(data.error?.message || "Gagal berlangganan.");
       }
     } catch {
       setMessage("Terjadi kesalahan jaringan.");

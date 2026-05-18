@@ -147,7 +147,7 @@ export default function MachinesPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setFormError(data.message || "Gagal menambahkan mesin.");
+        setFormError(data.error?.message || "Gagal menambahkan mesin.");
         return;
       }
 
@@ -183,7 +183,7 @@ export default function MachinesPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setFormError(data.message || "Gagal mengubah mesin.");
+        setFormError(data.error?.message || "Gagal mengubah mesin.");
         return;
       }
 
@@ -207,7 +207,7 @@ export default function MachinesPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setFormError(data.message || "Gagal menghapus mesin.");
+        setFormError(data.error?.message || "Gagal menghapus mesin.");
         return;
       }
 

@@ -124,7 +124,7 @@ export default function UsersPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setFormError(data.message || "Gagal membuat pengguna.");
+        setFormError(data.error?.message || "Gagal membuat pengguna.");
         return;
       }
 
@@ -157,7 +157,7 @@ export default function UsersPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setFormError(data.message || "Gagal mengubah pengguna.");
+        setFormError(data.error?.message || "Gagal mengubah pengguna.");
         return;
       }
 
@@ -181,7 +181,7 @@ export default function UsersPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setFormError(data.message || "Gagal menghapus pengguna.");
+        setFormError(data.error?.message || "Gagal menghapus pengguna.");
         return;
       }
 

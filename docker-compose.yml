@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SESSION_SECRET=${SESSION_SECRET:-complex_password_at_least_32_characters_long_for_production!}
+      - OWNER_USERNAME=${OWNER_USERNAME:-admin}
+      - OWNER_PASSWORD=${OWNER_PASSWORD:-admin123456}
+      - BACKUP_PATH=/app/backups
+    volumes:
+      - ./databases:/app/databases
+      - ./data:/app/data
+      - ./backups:/app/backups
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  databases:
+  data:
+  backups:
+  uploads:

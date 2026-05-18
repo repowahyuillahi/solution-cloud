@@ -37,7 +37,7 @@ export default function TenantLoginPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.message || "Login gagal. Periksa username dan password.");
+        setError(data.error?.message || "Login gagal. Periksa username dan password.");
         return;
       }
 

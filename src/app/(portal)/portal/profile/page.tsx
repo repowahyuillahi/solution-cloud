@@ -64,7 +64,7 @@ export default function PortalProfilePage() {
         setMessage("Profil berhasil disimpan.");
       } else {
         const data = await res.json();
-        setMessage(data.message || "Gagal menyimpan profil.");
+        setMessage(data.error?.message || "Gagal menyimpan profil.");
       }
     } catch {
       setMessage("Terjadi kesalahan jaringan.");

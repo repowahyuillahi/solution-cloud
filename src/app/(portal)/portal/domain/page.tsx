@@ -51,7 +51,7 @@ export default function PortalDomainPage() {
         setMessage("Domain berhasil disimpan.");
       } else {
         const data = await res.json();
-        setMessage(data.message || "Gagal menyimpan domain.");
+        setMessage(data.error?.message || "Gagal menyimpan domain.");
       }
     } catch {
       setMessage("Terjadi kesalahan jaringan.");

@@ -67,7 +67,7 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError({ field: data.field, message: data.message || "Registrasi gagal." });
+        setError({ field: data.error?.field, message: data.error?.message || "Registrasi gagal." });
         return;
       }
 

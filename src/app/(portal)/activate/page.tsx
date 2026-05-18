@@ -47,7 +47,7 @@ export default function ActivatePage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.message || "Aktivasi gagal. Periksa license code Anda.");
+        setError(data.error?.message || "Aktivasi gagal. Periksa license code Anda.");
         return;
       }
 

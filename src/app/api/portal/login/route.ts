@@ -41,12 +41,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { username: email, password } = parsed.data;
+  const { username, password } = parsed.data;
 
   try {
-    // Find tenant by adminEmail in master DB
+    // Find tenant by adminEmail in master DB (username field carries the email)
     const tenant = await prismaMaster.tenant.findUnique({
-      where: { adminEmail: email },
+      where: { adminEmail: username },
     });
 
     if (!tenant) {
