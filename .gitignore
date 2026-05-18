@@ -1,6 +1,13 @@
 # Dependencies
 node_modules/
 
+# Sensitive data files (credentials, personal data)
+Fingerprint*.xlsx
+Fingerprint*.ods
+Absensi_*.xlsx
+attlog.dat
+Laporan_Absensi_All.csv
+
 # Database files (sensitive, per-environment)
 databases/
 *.sqlite
