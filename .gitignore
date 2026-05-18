@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Database files (sensitive, per-environment)
+databases/
+*.sqlite
+
+# Attendance data files (large, per-environment)
+data/
+
+# Backups
+backups/
+
+# Uploaded files
+uploads/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Next.js
+.next/
+out/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
