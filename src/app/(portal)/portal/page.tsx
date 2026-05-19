@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -130,15 +131,15 @@ export default function PortalDashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-2">
-            <a href="/portal/profile">
+            <Link href="/portal/profile">
               <Button variant="outline" className="w-full">Profil Perusahaan</Button>
-            </a>
-            <a href="/portal/billing">
+            </Link>
+            <Link href="/portal/billing">
               <Button variant="outline" className="w-full">Billing</Button>
-            </a>
-            <a href="/portal/domain">
+            </Link>
+            <Link href="/portal/domain">
               <Button variant="outline" className="w-full">Pengaturan Domain</Button>
-            </a>
+            </Link>
             <a href={`/${info.slug}/`} target="_blank" rel="noopener noreferrer">
               <Button className="w-full">Buka Dashboard</Button>
             </a>

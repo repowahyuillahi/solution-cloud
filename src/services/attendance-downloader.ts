@@ -39,6 +39,54 @@ const CONCURRENCY_LIMIT = 5;
 /** Number of recent files to keep per branch */
 const FILES_TO_KEEP = 3;
 
+/** Maximum retry attempts for transient network errors. */
+const MAX_RETRIES = 2;
+
+/** Base delay in milliseconds for exponential backoff. */
+const RETRY_BASE_DELAY_MS = 1_000;
+
+// ============================================================================
+// Retry helper
+// ============================================================================
+
+/**
+ * Retry a transient async operation with exponential backoff.
+ * Only retries on network/timeout errors, not on 4xx auth errors.
+ */
+async function retryOnTransient<T>(
+  fn: () => Promise<T>,
+  attempts = MAX_RETRIES,
+): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i <= attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (!isTransientError(err) || i === attempts) {
+        throw err;
+      }
+      const delay = RETRY_BASE_DELAY_MS * Math.pow(2, i);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw lastError;
+}
+
+/** Determine whether an error is transient and worth retrying. */
+function isTransientError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const e = err as { code?: string; response?: { status?: number }; message?: string };
+  // Network-level codes
+  const transientCodes = ['ECONNRESET', 'ECONNABORTED', 'ETIMEDOUT', 'ENOTFOUND', 'EAI_AGAIN'];
+  if (e.code && transientCodes.includes(e.code)) return true;
+  // 5xx server errors
+  if (e.response?.status && e.response.status >= 500) return true;
+  // axios timeout
+  if (e.message && /timeout/i.test(e.message)) return true;
+  return false;
+}
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -66,6 +114,13 @@ export interface SingleDownloadResult {
 /**
  * Tracks which tenants currently have a bulk download in progress.
  * Prevents concurrent downloads for the same tenant (Requirement 5.7).
+ *
+ * Note: This is in-memory state. After a server crash/restart, the Set is
+ * empty, which means a new download can be started even if the previous one
+ * was interrupted mid-flight. The DownloadHistory record is only persisted
+ * AFTER a successful completion in the route handler — so an interrupted
+ * download leaves no orphan record. This is acceptable for the
+ * single-instance deployment model.
  */
 const activeDownloads = new Set<string>();
 
@@ -197,14 +252,13 @@ export async function downloadSingleMachine(
   machine: MachineRecord,
 ): Promise<SingleDownloadResult> {
   try {
-    // Step 1: Login to solutioncloud.co.id
-    const sessionCookie = await loginToSolutionCloud(
-      machine.serialNumber,
-      machine.password,
+    // Step 1: Login to solutioncloud.co.id (with retry on transient errors)
+    const sessionCookie = await retryOnTransient(() =>
+      loginToSolutionCloud(machine.serialNumber, machine.password),
     );
 
-    // Step 2: Download att_log.dat content
-    const content = await downloadAttLog(sessionCookie);
+    // Step 2: Download att_log.dat content (with retry on transient errors)
+    const content = await retryOnTransient(() => downloadAttLog(sessionCookie));
 
     if (!content || content.trim().length === 0) {
       return {

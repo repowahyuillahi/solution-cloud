@@ -15,8 +15,12 @@ import { getIronSession } from 'iron-session';
 
 import { sessionOptions } from '@/lib/auth';
 import { requireRole } from '@/lib/rbac';
+import { getTenantDb } from '@/lib/db-tenant';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import type { SessionData } from '@/types';
+
+const SETTING_KEY = 'notifications';
 
 interface NotificationConfig {
   whatsapp: {
@@ -40,14 +44,37 @@ interface NotificationConfig {
   };
 }
 
-// In-memory config store (MVP — in production, store in tenant DB)
-const notificationConfigs = new Map<string, NotificationConfig>();
-
 const DEFAULT_CONFIG: NotificationConfig = {
   whatsapp: { enabled: false, recipients: [] },
   email: { enabled: false, recipients: [] },
   telegram: { enabled: false, chatIds: [] },
 };
+
+async function loadConfig(slug: string): Promise<NotificationConfig> {
+  const db = await getTenantDb(slug);
+  const setting = await db.tenantSetting.findUnique({ where: { key: SETTING_KEY } });
+  if (!setting) return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  try {
+    const parsed = JSON.parse(setting.value) as Partial<NotificationConfig>;
+    return {
+      whatsapp: { ...DEFAULT_CONFIG.whatsapp, ...parsed.whatsapp },
+      email: { ...DEFAULT_CONFIG.email, ...parsed.email },
+      telegram: { ...DEFAULT_CONFIG.telegram, ...parsed.telegram },
+    };
+  } catch {
+    return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  }
+}
+
+async function saveConfig(slug: string, config: NotificationConfig): Promise<void> {
+  const db = await getTenantDb(slug);
+  const value = JSON.stringify(config);
+  await db.tenantSetting.upsert({
+    where: { key: SETTING_KEY },
+    create: { key: SETTING_KEY, value },
+    update: { value },
+  });
+}
 
 export async function GET(
   _request: NextRequest,
@@ -66,8 +93,13 @@ export async function GET(
     return createErrorResponse(ErrorCode.RBAC_CROSS_TENANT_ACCESS, 'Akses lintas tenant tidak diizinkan.');
   }
 
-  const config = notificationConfigs.get(slug) ?? DEFAULT_CONFIG;
-  return NextResponse.json(config, { status: 200 });
+  try {
+    const config = await loadConfig(slug);
+    return NextResponse.json(config, { status: 200 });
+  } catch (error: unknown) {
+    logger.error(`[GET /api/${slug}/settings/notifications] Error:`, { error });
+    return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Gagal memuat konfigurasi notifikasi.');
+  }
 }
 
 export async function PUT(
@@ -94,17 +126,22 @@ export async function PUT(
     return createErrorResponse(ErrorCode.VALIDATION_FAILED, 'Body request tidak valid.');
   }
 
-  const existing = notificationConfigs.get(slug) ?? DEFAULT_CONFIG;
-  const updated: NotificationConfig = {
-    whatsapp: { ...existing.whatsapp, ...body.whatsapp },
-    email: { ...existing.email, ...body.email },
-    telegram: { ...existing.telegram, ...body.telegram },
-  };
+  try {
+    const existing = await loadConfig(slug);
+    const updated: NotificationConfig = {
+      whatsapp: { ...existing.whatsapp, ...body.whatsapp },
+      email: { ...existing.email, ...body.email },
+      telegram: { ...existing.telegram, ...body.telegram },
+    };
 
-  notificationConfigs.set(slug, updated);
+    await saveConfig(slug, updated);
 
-  return NextResponse.json(
-    { message: 'Konfigurasi notifikasi berhasil disimpan.', config: updated },
-    { status: 200 },
-  );
+    return NextResponse.json(
+      { message: 'Konfigurasi notifikasi berhasil disimpan.', config: updated },
+      { status: 200 },
+    );
+  } catch (error: unknown) {
+    logger.error(`[PUT /api/${slug}/settings/notifications] Error:`, { error });
+    return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Gagal menyimpan konfigurasi notifikasi.');
+  }
 }

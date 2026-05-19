@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import { getSession } from '@/lib/auth';
 import { prismaMaster } from '@/lib/db-master';
 import { regenerateLicenseCode } from '@/services/subscription-manager';
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
       daysRemaining,
     });
   } catch (error: unknown) {
-    console.error('[GET /api/portal/license] Unexpected error:', error);
+    logger.error('[GET /api/portal/license] Unexpected error:', { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan internal server.',
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ licenseCode: newCode });
   } catch (error: unknown) {
-    console.error('[POST /api/portal/license] Unexpected error:', error);
+    logger.error('[POST /api/portal/license] Unexpected error:', { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan internal server.',

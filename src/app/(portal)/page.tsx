@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,9 +92,9 @@ export default function PortalLoginPage() {
         <CardFooter className="justify-center">
           <p className="text-sm text-muted-foreground">
             Belum punya akun?{" "}
-            <a href="/register" className="text-primary underline underline-offset-4">
+            <Link href="/register" className="text-primary underline underline-offset-4">
               Daftar sekarang
-            </a>
+            </Link>
           </p>
         </CardFooter>
       </Card>

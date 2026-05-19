@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,9 +117,9 @@ export default function ActivatePage() {
         </CardContent>
       </Card>
       <p className="mt-4 text-sm text-muted-foreground">
-        <a href="/" className="text-primary underline underline-offset-4">
+        <Link href="/" className="text-primary underline underline-offset-4">
           Kembali ke halaman utama
-        </a>
+        </Link>
       </p>
     </main>
   );

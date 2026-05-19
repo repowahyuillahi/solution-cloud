@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,12 +102,12 @@ export default function RegisterPage() {
               <p>Trial berakhir: {new Date(result.trialExpiresAt).toLocaleDateString("id-ID")}</p>
             </div>
             <div className="flex flex-col gap-2">
-              <a href={`/${result.slug}/activate`}>
+              <Link href={`/${result.slug}/activate`}>
                 <Button className="w-full">Aktivasi Dashboard</Button>
-              </a>
-              <a href="/">
+              </Link>
+              <Link href="/">
                 <Button variant="outline" className="w-full">Kembali ke Login</Button>
-              </a>
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -212,9 +213,9 @@ export default function RegisterPage() {
       </Card>
       <p className="mt-4 text-sm text-muted-foreground">
         Sudah punya akun?{" "}
-        <a href="/" className="text-primary underline underline-offset-4">
+        <Link href="/" className="text-primary underline underline-offset-4">
           Masuk
-        </a>
+        </Link>
       </p>
     </main>
   );

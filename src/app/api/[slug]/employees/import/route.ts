@@ -32,6 +32,13 @@ export async function POST(
   if (!check.allowed) {
     return createErrorResponse(ErrorCode.RBAC_INSUFFICIENT_PERMISSION, 'Akses ditolak.');
   }
+  // Verify tenant session ownership
+  if (session.tenantSlug !== slug) {
+    return createErrorResponse(
+      ErrorCode.RBAC_CROSS_TENANT_ACCESS,
+      'Akses lintas tenant tidak diizinkan.',
+    );
+  }
 
   // Parse multipart form data
   let formData: FormData;

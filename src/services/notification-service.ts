@@ -12,6 +12,7 @@
  */
 
 import axios from 'axios';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types
@@ -133,7 +134,7 @@ export async function sendEmail(
     //   attachments: [{ filename: fileName, content: fileBuffer }],
     // });
 
-    console.log(`[Email] Would send "${fileName}" to ${recipients.length} recipients via ${config.smtpHost}`);
+    logger.info(`[Email] Would send "${fileName}" to ${recipients.length} recipients via ${config.smtpHost}`);
 
     return {
       channel: 'email',

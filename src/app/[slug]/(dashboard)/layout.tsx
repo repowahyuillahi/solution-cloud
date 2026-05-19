@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, usePathname, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import type { TenantRole, Feature } from "@/types";
@@ -114,7 +115,7 @@ export default function TenantDashboardLayout({
         </p>
         <nav className="flex flex-col gap-1">
           {visibleNavItems.map((item) => (
-            <a
+            <Link
               key={item.href}
               href={item.href}
               className={`rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted ${
@@ -124,7 +125,7 @@ export default function TenantDashboardLayout({
               }`}
             >
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
         <div className="mt-auto">

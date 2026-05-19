@@ -120,18 +120,24 @@ export async function register(
     },
   });
 
-  // 8. Provision tenant database
-  await provisionDatabase(companySlug);
+  // 8. Provision tenant database (with rollback on failure)
+  try {
+    await provisionDatabase(companySlug);
 
-  // 9. Create default Superadmin user in tenant DB
-  const tenantDb = await getTenantDb(companySlug);
-  await tenantDb.user.create({
-    data: {
-      username: adminUsername,
-      passwordHash: adminPasswordHash,
-      role: 'Superadmin',
-    },
-  });
+    // 9. Create default Superadmin user in tenant DB
+    const tenantDb = await getTenantDb(companySlug);
+    await tenantDb.user.create({
+      data: {
+        username: adminUsername,
+        passwordHash: adminPasswordHash,
+        role: 'Superadmin',
+      },
+    });
+  } catch (provisionError) {
+    // Rollback: delete the tenant master record so the slug/email are free again
+    await prismaMaster.tenant.delete({ where: { id: tenant.id } }).catch(() => {});
+    throw provisionError;
+  }
 
   // 10. Return result
   return {

@@ -13,11 +13,26 @@ import bcrypt from 'bcryptjs';
 
 import { loginSchema } from '@/lib/validation';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
+import { checkRateLimit, getClientIp, resetRateLimit } from '@/lib/rate-limit';
 import { createSession } from '@/lib/auth';
 import { prismaMaster } from '@/lib/db-master';
 import type { SessionData } from '@/types';
 
+const LOGIN_RATE_LIMIT = { max: 10, windowMs: 60_000 };
+
 export async function POST(request: NextRequest) {
+  // Rate limit per IP
+  const ip = getClientIp(request.headers);
+  const rateKey = `portal-login:${ip}`;
+  const rl = checkRateLimit(rateKey, LOGIN_RATE_LIMIT);
+  if (!rl.allowed) {
+    return createErrorResponse(
+      ErrorCode.RATE_LIMIT_ACCOUNT_LOCKED,
+      `Terlalu banyak percobaan login. Coba lagi dalam ${Math.ceil(rl.retryAfterMs / 1000)} detik.`,
+    );
+  }
+
   // Parse request body
   let body: unknown;
   try {
@@ -83,9 +98,12 @@ export async function POST(request: NextRequest) {
 
     await createSession(response, sessionData);
 
+    // Reset rate limit on successful login
+    resetRateLimit(rateKey);
+
     return response;
   } catch (error: unknown) {
-    console.error('[POST /api/portal/login] Unexpected error:', error);
+    logger.error('[POST /api/portal/login] Unexpected error:', { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan internal server.',

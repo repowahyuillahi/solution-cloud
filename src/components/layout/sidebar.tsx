@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { TenantRole, Feature } from "@/types";
 
@@ -57,7 +58,7 @@ export function Sidebar({ slug, role, username, onLogout }: SidebarProps) {
       </p>
       <nav className="flex flex-col gap-1">
         {visibleNavItems.map((item) => (
-          <a
+          <Link
             key={item.href}
             href={item.href}
             className={`rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted ${
@@ -67,7 +68,7 @@ export function Sidebar({ slug, role, username, onLogout }: SidebarProps) {
             }`}
           >
             {item.label}
-          </a>
+          </Link>
         ))}
       </nav>
       <div className="mt-auto">

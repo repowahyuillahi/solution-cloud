@@ -21,6 +21,7 @@ import { sessionOptions } from '@/lib/auth';
 import { requireRole } from '@/lib/rbac';
 import { reportFilterSchema } from '@/lib/validation';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import { resolveBySlug } from '@/lib/tenant-resolver';
 import { generateReport } from '@/services/report-generator';
 import { exportToPdf } from '@/services/report-export';
@@ -98,7 +99,7 @@ export async function GET(
       },
     });
   } catch (error: unknown) {
-    console.error(`[GET /api/${slug}/reports/export/pdf] Unexpected error:`, error);
+    logger.error(`[GET /api/${slug}/reports/export/pdf] Unexpected error:`, { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan saat mengekspor laporan ke PDF.',

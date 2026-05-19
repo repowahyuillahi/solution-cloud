@@ -13,6 +13,7 @@ import { sessionOptions } from '@/lib/auth';
 import { requireRole } from '@/lib/rbac';
 import { getTenantDb } from '@/lib/db-tenant';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import type { SessionData } from '@/types';
 
 export async function PUT(
@@ -27,6 +28,13 @@ export async function PUT(
   const check = requireRole(['Superadmin'])(session.loginAt ? session : null);
   if (!check.allowed) {
     return createErrorResponse(ErrorCode.RBAC_INSUFFICIENT_PERMISSION, 'Akses ditolak.');
+  }
+  // Verify tenant session ownership
+  if (session.tenantSlug !== slug) {
+    return createErrorResponse(
+      ErrorCode.RBAC_CROSS_TENANT_ACCESS,
+      'Akses lintas tenant tidak diizinkan.',
+    );
   }
 
   // Parse request body
@@ -150,7 +158,7 @@ export async function PUT(
       );
     }
 
-    console.error(`[PUT /api/${slug}/machines/${id}] Unexpected error:`, error);
+    logger.error(`[PUT /api/${slug}/machines/${id}] Unexpected error:`, { error: error });
     return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Terjadi kesalahan internal server.');
   }
 }
@@ -167,6 +175,13 @@ export async function DELETE(
   const check = requireRole(['Superadmin'])(session.loginAt ? session : null);
   if (!check.allowed) {
     return createErrorResponse(ErrorCode.RBAC_INSUFFICIENT_PERMISSION, 'Akses ditolak.');
+  }
+  // Verify tenant session ownership
+  if (session.tenantSlug !== slug) {
+    return createErrorResponse(
+      ErrorCode.RBAC_CROSS_TENANT_ACCESS,
+      'Akses lintas tenant tidak diizinkan.',
+    );
   }
 
   const machineId = parseInt(id, 10);
@@ -187,7 +202,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Mesin berhasil dihapus.' }, { status: 200 });
   } catch (error: unknown) {
-    console.error(`[DELETE /api/${slug}/machines/${id}] Unexpected error:`, error);
+    logger.error(`[DELETE /api/${slug}/machines/${id}] Unexpected error:`, { error: error });
     return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Terjadi kesalahan internal server.');
   }
 }

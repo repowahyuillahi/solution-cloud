@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+// === Password complexity helper ===
+// Reusable password schema: at least 8 chars, must contain a letter and a digit.
+const passwordSchema = z
+  .string()
+  .min(8, 'Password minimal 8 karakter.')
+  .max(128, 'Password maksimal 128 karakter.')
+  .regex(/[A-Za-z]/, 'Password harus mengandung minimal satu huruf.')
+  .regex(/[0-9]/, 'Password harus mengandung minimal satu angka.');
+
 // === Portal Schemas ===
 
 export const registrationSchema = z.object({
@@ -14,7 +23,7 @@ export const registrationSchema = z.object({
     ),
   adminEmail: z.string().email().max(255),
   adminUsername: z.string().min(3).max(30).regex(/^[a-zA-Z0-9]+$/),
-  adminPassword: z.string().min(8).max(128),
+  adminPassword: passwordSchema,
 });
 export type RegistrationInput = z.infer<typeof registrationSchema>;
 
@@ -40,7 +49,6 @@ export const customDomainSchema = z.object({
 });
 export type CustomDomainInput = z.infer<typeof customDomainSchema>;
 
-// === Tenant App Schemas ===
 
 export const loginSchema = z.object({
   username: z.string().min(1).max(50),
@@ -50,13 +58,13 @@ export type LoginInput = z.infer<typeof loginSchema>;
 
 export const createUserSchema = z.object({
   username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9]+$/),
-  password: z.string().min(8).max(128),
+  password: passwordSchema,
   role: z.enum(['Superadmin', 'HRD', 'Resepsionis']),
 });
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 
 export const updateUserPasswordSchema = z.object({
-  password: z.string().min(8).max(128),
+  password: passwordSchema,
 });
 export type UpdateUserPasswordInput = z.infer<typeof updateUserPasswordSchema>;
 

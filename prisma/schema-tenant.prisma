@@ -54,6 +54,7 @@ model BranchAssignment {
   machine    Machine  @relation(fields: [kodeDealer], references: [kodeDealer], onDelete: Cascade)
 
   @@unique([employeeId, kodeDealer])
+  @@index([kodeDealer])
 }
 
 model BranchSchedule {
@@ -76,4 +77,31 @@ model DownloadHistory {
   startedAt     DateTime
   completedAt   DateTime?
   triggeredBy   User      @relation(fields: [triggeredById], references: [id])
+
+  @@index([completedAt])
+  @@index([startedAt])
+}
+
+
+/// Tenant-level settings stored as JSON-like key/value rows.
+/// Keys used:
+///  - "auto-download": { enabled: bool, scheduleTime: "HH:MM" }
+///  - "notifications": { whatsapp, email, telegram } objects
+model TenantSetting {
+  key       String   @id
+  value     String   // JSON-encoded value
+  updatedAt DateTime @updatedAt
+}
+
+/// Audit log for sensitive admin actions (deletions, config changes).
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  actorId   Int?     // user id (null for system / cron)
+  action    String   // e.g. "user.delete", "settings.update"
+  target    String?  // entity id or path
+  details   String?  // optional JSON metadata
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
 }

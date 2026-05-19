@@ -17,6 +17,7 @@ import { sessionOptions } from '@/lib/auth';
 import { requireRole } from '@/lib/rbac';
 import { getTenantDb } from '@/lib/db-tenant';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import type { SessionData } from '@/types';
 
 const DEFAULT_JAM_MASUK = '08:00';
@@ -81,7 +82,7 @@ export async function GET(
 
     return NextResponse.json(schedules, { status: 200 });
   } catch (error: unknown) {
-    console.error(`[GET /api/${slug}/settings/schedule] Error:`, error);
+    logger.error(`[GET /api/${slug}/settings/schedule] Error:`, { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan saat memuat jadwal.',

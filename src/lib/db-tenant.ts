@@ -171,7 +171,6 @@ export async function provisionDatabase(
       "db",
       "push",
       "--config=prisma.tenant.config.ts",
-      "--skip-generate",
       "--accept-data-loss",
     ],
     {
@@ -182,11 +181,16 @@ export async function provisionDatabase(
       },
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
+      shell: process.platform === "win32",
     }
   );
 
   if (result.status !== 0) {
-    const stderr = result.stderr || result.stdout || "(no output)";
+    const stderr =
+      (result.stderr || "").trim() ||
+      (result.stdout || "").trim() ||
+      (result.error?.message || "") ||
+      "(no output)";
     throw new Error(
       `Failed to provision tenant database for "${tenantSlug}": ${stderr}`
     );

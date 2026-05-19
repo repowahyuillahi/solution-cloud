@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { companyProfileSchema } from '@/lib/validation';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import { getSession } from '@/lib/auth';
 import { prismaMaster } from '@/lib/db-master';
 
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
       address: tenant.address,
     });
   } catch (error: unknown) {
-    console.error('[GET /api/portal/profile] Unexpected error:', error);
+    logger.error('[GET /api/portal/profile] Unexpected error:', { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan internal server.',
@@ -105,7 +106,7 @@ export async function PUT(request: NextRequest) {
       address: tenant.address,
     });
   } catch (error: unknown) {
-    console.error('[PUT /api/portal/profile] Unexpected error:', error);
+    logger.error('[PUT /api/portal/profile] Unexpected error:', { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan internal server.',

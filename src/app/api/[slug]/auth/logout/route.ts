@@ -12,6 +12,7 @@ import { getIronSession } from 'iron-session';
 
 import { sessionOptions } from '@/lib/auth';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import type { SessionData } from '@/types';
 
 export async function POST(
@@ -29,7 +30,7 @@ export async function POST(
 
     return NextResponse.json({ message: 'Logged out' }, { status: 200 });
   } catch (error: unknown) {
-    console.error('[POST /api/[slug]/auth/logout] Unexpected error:', error);
+    logger.error('[POST /api/[slug]/auth/logout] Unexpected error:', { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan internal server.',

@@ -43,11 +43,41 @@ async function ensureDir(dir: string): Promise<void> {
 }
 
 /**
+ * Validate that a path component doesn't contain dangerous characters.
+ * Throws PATH_TRAVERSAL if the input has null bytes, control chars, or
+ * Windows-reserved chars that could lead to unintended file paths.
+ */
+function assertSafePathComponent(value: string, label: string): void {
+  if (typeof value !== 'string' || value.length === 0) {
+    throw new FileStorageError(
+      'PATH_TRAVERSAL',
+      `Invalid ${label}: must be a non-empty string.`,
+    );
+  }
+  // Reject null byte, path separators, and parent traversal
+  if (
+    value.includes('\0') ||
+    value.includes('/') ||
+    value.includes('\\') ||
+    value === '.' ||
+    value === '..'
+  ) {
+    throw new FileStorageError(
+      'PATH_TRAVERSAL',
+      `Invalid ${label}: contains forbidden characters.`,
+    );
+  }
+}
+
+/**
  * Resolve the absolute directory path for a tenant's branch files.
  * Validates that the resolved path stays within DATA_ROOT to prevent
  * path traversal attacks.
  */
 function resolveBranchDir(tenantSlug: string, namaDealer: string): string {
+  assertSafePathComponent(tenantSlug, 'tenantSlug');
+  assertSafePathComponent(namaDealer, 'namaDealer');
+
   const resolved = path.resolve(DATA_ROOT, tenantSlug, namaDealer);
   const dataRootNormalized = path.resolve(DATA_ROOT);
   if (!resolved.startsWith(dataRootNormalized + path.sep) && resolved !== dataRootNormalized) {
@@ -63,6 +93,8 @@ function resolveBranchDir(tenantSlug: string, namaDealer: string): string {
  * Resolve the absolute directory path for a tenant's root data folder.
  */
 function resolveTenantDir(tenantSlug: string): string {
+  assertSafePathComponent(tenantSlug, 'tenantSlug');
+
   const resolved = path.resolve(DATA_ROOT, tenantSlug);
   const dataRootNormalized = path.resolve(DATA_ROOT);
   if (!resolved.startsWith(dataRootNormalized + path.sep) && resolved !== dataRootNormalized) {

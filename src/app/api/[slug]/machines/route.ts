@@ -14,6 +14,7 @@ import { requireRole } from '@/lib/rbac';
 import { getTenantDb } from '@/lib/db-tenant';
 import { createMachineSchema } from '@/lib/validation';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import type { SessionData } from '@/types';
 
 export async function GET(
@@ -28,6 +29,13 @@ export async function GET(
   const check = requireRole(['Superadmin'])(session.loginAt ? session : null);
   if (!check.allowed) {
     return createErrorResponse(ErrorCode.RBAC_INSUFFICIENT_PERMISSION, 'Akses ditolak.');
+  }
+  // Verify tenant session ownership
+  if (session.tenantSlug !== slug) {
+    return createErrorResponse(
+      ErrorCode.RBAC_CROSS_TENANT_ACCESS,
+      'Akses lintas tenant tidak diizinkan.',
+    );
   }
 
   try {
@@ -46,7 +54,7 @@ export async function GET(
 
     return NextResponse.json(machines, { status: 200 });
   } catch (error: unknown) {
-    console.error(`[GET /api/${slug}/machines] Unexpected error:`, error);
+    logger.error(`[GET /api/${slug}/machines] Unexpected error:`, { error: error });
     return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Terjadi kesalahan internal server.');
   }
 }
@@ -63,6 +71,13 @@ export async function POST(
   const check = requireRole(['Superadmin'])(session.loginAt ? session : null);
   if (!check.allowed) {
     return createErrorResponse(ErrorCode.RBAC_INSUFFICIENT_PERMISSION, 'Akses ditolak.');
+  }
+  // Verify tenant session ownership
+  if (session.tenantSlug !== slug) {
+    return createErrorResponse(
+      ErrorCode.RBAC_CROSS_TENANT_ACCESS,
+      'Akses lintas tenant tidak diizinkan.',
+    );
   }
 
   // Parse request body
@@ -146,7 +161,7 @@ export async function POST(
       );
     }
 
-    console.error(`[POST /api/${slug}/machines] Unexpected error:`, error);
+    logger.error(`[POST /api/${slug}/machines] Unexpected error:`, { error: error });
     return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Terjadi kesalahan internal server.');
   }
 }

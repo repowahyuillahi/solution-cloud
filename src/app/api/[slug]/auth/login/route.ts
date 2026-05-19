@@ -14,14 +14,29 @@ import { getIronSession } from 'iron-session';
 
 import { loginSchema } from '@/lib/validation';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
+import { checkRateLimit, getClientIp, resetRateLimit } from '@/lib/rate-limit';
 import { loginTenantUser, isAccountLocked, sessionOptions } from '@/lib/auth';
 import type { SessionData } from '@/types';
+
+const LOGIN_RATE_LIMIT = { max: 10, windowMs: 60_000 };
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
+
+  // Rate limit per IP per tenant
+  const ip = getClientIp(request.headers);
+  const rateKey = `tenant-login:${slug}:${ip}`;
+  const rl = checkRateLimit(rateKey, LOGIN_RATE_LIMIT);
+  if (!rl.allowed) {
+    return createErrorResponse(
+      ErrorCode.RATE_LIMIT_ACCOUNT_LOCKED,
+      `Terlalu banyak percobaan login. Coba lagi dalam ${Math.ceil(rl.retryAfterMs / 1000)} detik.`,
+    );
+  }
 
   // Parse request body
   let body: unknown;
@@ -80,6 +95,9 @@ export async function POST(
 
     await session.save();
 
+    // Reset rate limit on successful login
+    resetRateLimit(rateKey);
+
     return NextResponse.json(
       {
         userId: sessionData.userId,
@@ -89,7 +107,7 @@ export async function POST(
       { status: 200 },
     );
   } catch (error: unknown) {
-    console.error(`[POST /api/${slug}/auth/login] Unexpected error:`, error);
+    logger.error(`[POST /api/${slug}/auth/login] Unexpected error:`, { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan internal server.',

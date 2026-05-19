@@ -19,12 +19,43 @@ import { getIronSession } from 'iron-session';
 
 import { sessionOptions } from '@/lib/auth';
 import { requireRole } from '@/lib/rbac';
+import { getTenantDb } from '@/lib/db-tenant';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import type { SessionData } from '@/types';
 
-// In-memory config store (in production, this would be in the tenant DB)
-// For MVP, we store configs in a simple Map keyed by tenant slug
-const autoDownloadConfigs = new Map<string, { enabled: boolean; scheduleTime: string }>();
+const SETTING_KEY = 'auto-download';
+const DEFAULT_CONFIG = { enabled: false, scheduleTime: '06:00' };
+
+interface AutoDownloadConfig {
+  enabled: boolean;
+  scheduleTime: string;
+}
+
+async function loadConfig(slug: string): Promise<AutoDownloadConfig> {
+  const db = await getTenantDb(slug);
+  const setting = await db.tenantSetting.findUnique({ where: { key: SETTING_KEY } });
+  if (!setting) return { ...DEFAULT_CONFIG };
+  try {
+    const parsed = JSON.parse(setting.value) as Partial<AutoDownloadConfig>;
+    return {
+      enabled: typeof parsed.enabled === 'boolean' ? parsed.enabled : false,
+      scheduleTime: typeof parsed.scheduleTime === 'string' ? parsed.scheduleTime : '06:00',
+    };
+  } catch {
+    return { ...DEFAULT_CONFIG };
+  }
+}
+
+async function saveConfig(slug: string, config: AutoDownloadConfig): Promise<void> {
+  const db = await getTenantDb(slug);
+  const value = JSON.stringify(config);
+  await db.tenantSetting.upsert({
+    where: { key: SETTING_KEY },
+    create: { key: SETTING_KEY, value },
+    update: { value },
+  });
+}
 
 export async function GET(
   _request: NextRequest,
@@ -43,8 +74,13 @@ export async function GET(
     return createErrorResponse(ErrorCode.RBAC_CROSS_TENANT_ACCESS, 'Akses lintas tenant tidak diizinkan.');
   }
 
-  const config = autoDownloadConfigs.get(slug) ?? { enabled: false, scheduleTime: '06:00' };
-  return NextResponse.json(config, { status: 200 });
+  try {
+    const config = await loadConfig(slug);
+    return NextResponse.json(config, { status: 200 });
+  } catch (error: unknown) {
+    logger.error(`[GET /api/${slug}/settings/auto-download] Error:`, { error });
+    return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Gagal memuat konfigurasi.');
+  }
 }
 
 export async function PUT(
@@ -74,15 +110,18 @@ export async function PUT(
   const enabled = body.enabled ?? false;
   const scheduleTime = body.scheduleTime ?? '06:00';
 
-  // Validate time format
   if (!/^\d{2}:\d{2}$/.test(scheduleTime)) {
     return createErrorResponse(ErrorCode.VALIDATION_FAILED, 'Format waktu tidak valid (HH:MM).', 'scheduleTime');
   }
 
-  autoDownloadConfigs.set(slug, { enabled, scheduleTime });
-
-  return NextResponse.json(
-    { message: 'Konfigurasi auto-download berhasil disimpan.', enabled, scheduleTime },
-    { status: 200 },
-  );
+  try {
+    await saveConfig(slug, { enabled, scheduleTime });
+    return NextResponse.json(
+      { message: 'Konfigurasi auto-download berhasil disimpan.', enabled, scheduleTime },
+      { status: 200 },
+    );
+  } catch (error: unknown) {
+    logger.error(`[PUT /api/${slug}/settings/auto-download] Error:`, { error });
+    return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Gagal menyimpan konfigurasi.');
+  }
 }

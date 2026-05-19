@@ -13,6 +13,7 @@
  */
 
 import { prismaMaster } from '@/lib/db-master';
+import { logger } from '@/lib/logger';
 import { getTenantDb } from '@/lib/db-tenant';
 import { startBulkDownload } from './attendance-downloader';
 import { generateReport } from './report-generator';
@@ -137,7 +138,7 @@ async function processOneTenant(
       // const excelBuffer = await exportToExcel(records, tenantInfo);
       // const fileName = `laporan-absensi-${tenantSlug}-${today}.xlsx`;
       // Send via WhatsApp, Email, Telegram using notification-service.ts
-      console.log(`[Cron] ${tenantInfo.companyName} (${tenantSlug}): Report generated with ${records.length} records`);
+      logger.info(`[Cron] ${tenantInfo.companyName} (${tenantSlug}): Report generated with ${records.length} records`);
     }
   } catch (error) {
     result.errors.push(error instanceof Error ? error.message : 'Unknown error');

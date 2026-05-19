@@ -19,6 +19,7 @@ import { sessionOptions } from '@/lib/auth';
 import { requireRole } from '@/lib/rbac';
 import { getTenantDb } from '@/lib/db-tenant';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import type { SessionData } from '@/types';
 
 export async function GET(
@@ -79,7 +80,7 @@ export async function GET(
       { status: 200 },
     );
   } catch (error: unknown) {
-    console.error(`[GET /api/${slug}/dashboard] Error:`, error);
+    logger.error(`[GET /api/${slug}/dashboard] Error:`, { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan saat memuat dashboard.',

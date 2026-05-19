@@ -14,6 +14,7 @@ import { requireRole } from '@/lib/rbac';
 import { getTenantDb } from '@/lib/db-tenant';
 import { createEmployeeSchema } from '@/lib/validation';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import type { SessionData } from '@/types';
 
 export async function GET(
@@ -29,33 +30,76 @@ export async function GET(
   if (!check.allowed) {
     return createErrorResponse(ErrorCode.RBAC_INSUFFICIENT_PERMISSION, 'Akses ditolak.');
   }
+  // Verify tenant session ownership
+  if (session.tenantSlug !== slug) {
+    return createErrorResponse(
+      ErrorCode.RBAC_CROSS_TENANT_ACCESS,
+      'Akses lintas tenant tidak diizinkan.',
+    );
+  }
 
   try {
     const db = await getTenantDb(slug);
 
-    // Optional branch filter
-    const kodeDealer = request.nextUrl.searchParams.get('kodeDealer');
+    const params = request.nextUrl.searchParams;
+    const kodeDealer = params.get('kodeDealer');
+    const search = params.get('search');
+    const pageRaw = params.get('page');
+    const pageSizeRaw = params.get('pageSize');
 
-    const employees = await db.employee.findMany({
-      where: kodeDealer
-        ? { branchAssignments: { some: { kodeDealer } } }
-        : undefined,
+    // Pagination is opt-in: when no page params are provided, return all rows
+    // (preserves backward compatibility with existing UI).
+    const paginated = pageRaw !== null || pageSizeRaw !== null;
+    const page = Math.max(1, parseInt(pageRaw ?? '1', 10) || 1);
+    const pageSize = Math.min(200, Math.max(1, parseInt(pageSizeRaw ?? '50', 10) || 50));
+
+    const where: Record<string, unknown> = {};
+    if (kodeDealer) {
+      where.branchAssignments = { some: { kodeDealer } };
+    }
+    if (search) {
+      where.OR = [
+        { kodeKaryawan: { contains: search } },
+        { namaKaryawan: { contains: search } },
+      ];
+    }
+
+    const findArgs = {
+      where,
       select: {
         id: true,
         kodeKaryawan: true,
         namaKaryawan: true,
         branchAssignments: {
-          select: {
-            kodeDealer: true,
-          },
+          select: { kodeDealer: true },
         },
       },
-      orderBy: { kodeKaryawan: 'asc' },
-    });
+      orderBy: { kodeKaryawan: 'asc' as const },
+    };
 
-    return NextResponse.json(employees, { status: 200 });
+    if (!paginated) {
+      const employees = await db.employee.findMany(findArgs);
+      return NextResponse.json(employees, { status: 200 });
+    }
+
+    const [total, employees] = await Promise.all([
+      db.employee.count({ where }),
+      db.employee.findMany({
+        ...findArgs,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+    ]);
+
+    return NextResponse.json(
+      {
+        data: employees,
+        pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
+      },
+      { status: 200 },
+    );
   } catch (error: unknown) {
-    console.error(`[GET /api/${slug}/employees] Unexpected error:`, error);
+    logger.error(`[GET /api/${slug}/employees] Unexpected error:`, { error: error });
     return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Terjadi kesalahan internal server.');
   }
 }
@@ -72,6 +116,13 @@ export async function POST(
   const check = requireRole(['Superadmin', 'HRD'])(session.loginAt ? session : null);
   if (!check.allowed) {
     return createErrorResponse(ErrorCode.RBAC_INSUFFICIENT_PERMISSION, 'Akses ditolak.');
+  }
+  // Verify tenant session ownership
+  if (session.tenantSlug !== slug) {
+    return createErrorResponse(
+      ErrorCode.RBAC_CROSS_TENANT_ACCESS,
+      'Akses lintas tenant tidak diizinkan.',
+    );
   }
 
   // Parse request body
@@ -138,7 +189,7 @@ export async function POST(
       );
     }
 
-    console.error(`[POST /api/${slug}/employees] Unexpected error:`, error);
+    logger.error(`[POST /api/${slug}/employees] Unexpected error:`, { error: error });
     return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Terjadi kesalahan internal server.');
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -61,7 +62,7 @@ export default function PortalDashboardLayout({
         <h2 className="text-sm font-semibold mb-4">Customer Portal</h2>
         <nav className="flex flex-col gap-1">
           {navItems.map((item) => (
-            <a
+            <Link
               key={item.href}
               href={item.href}
               className={`rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted ${
@@ -71,7 +72,7 @@ export default function PortalDashboardLayout({
               }`}
             >
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
         <div className="mt-auto">

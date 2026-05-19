@@ -20,6 +20,7 @@ import { requireRole } from '@/lib/rbac';
 import { getTenantDb } from '@/lib/db-tenant';
 import { branchScheduleSchema } from '@/lib/validation';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import type { SessionData } from '@/types';
 
 export async function PUT(
@@ -101,7 +102,7 @@ export async function PUT(
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error: unknown) {
-    console.error(`[PUT /api/${slug}/settings/schedule/${id}] Error:`, error);
+    logger.error(`[PUT /api/${slug}/settings/schedule/${id}] Error:`, { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan saat memperbarui jadwal.',

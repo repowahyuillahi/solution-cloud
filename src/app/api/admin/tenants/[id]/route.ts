@@ -14,6 +14,7 @@ import { sessionOptions } from '@/lib/auth';
 import { requireOwner } from '@/lib/rbac';
 import { prismaMaster } from '@/lib/db-master';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import type { SessionData } from '@/types';
 
 export async function GET(
@@ -50,9 +51,13 @@ export async function GET(
       return createErrorResponse(ErrorCode.NOT_FOUND_TENANT, 'Tenant tidak ditemukan.');
     }
 
-    return NextResponse.json(tenant, { status: 200 });
+    // Strip sensitive fields before returning
+    const { adminPasswordHash: _omit, ...safeTenant } = tenant;
+    void _omit;
+
+    return NextResponse.json(safeTenant, { status: 200 });
   } catch (error: unknown) {
-    console.error(`[GET /api/admin/tenants/${id}] Error:`, error);
+    logger.error(`[GET /api/admin/tenants/${id}] Error:`, { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan saat memuat detail tenant.',

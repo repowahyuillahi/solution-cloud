@@ -19,6 +19,7 @@ import { sessionOptions } from '@/lib/auth';
 import { requireRole } from '@/lib/rbac';
 import { getTenantDb } from '@/lib/db-tenant';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import {
   startBulkDownload,
   isDownloadInProgress,
@@ -78,7 +79,7 @@ export async function POST(
       },
     });
   } catch (error: unknown) {
-    console.error(`[POST /api/${slug}/download/bulk] DB error:`, error);
+    logger.error(`[POST /api/${slug}/download/bulk] DB error:`, { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_DATABASE_ERROR,
       'Gagal mengambil data mesin dari database.',
@@ -138,7 +139,7 @@ export async function POST(
 
           // Save download history to tenant DB
           saveDownloadHistory(slug, session.userId!, result).catch((err) => {
-            console.error(`[POST /api/${slug}/download/bulk] Failed to save history:`, err);
+            logger.error(`[POST /api/${slug}/download/bulk] Failed to save history:`, { error: err });
           });
 
           controller.close();

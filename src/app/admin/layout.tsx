@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -64,7 +65,7 @@ export default function AdminLayout({
         <p className="text-xs text-muted-foreground mb-4">Owner Panel</p>
         <nav className="flex flex-col gap-1">
           {navItems.map((item) => (
-            <a
+            <Link
               key={item.href}
               href={item.href}
               className={`rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted ${
@@ -74,7 +75,7 @@ export default function AdminLayout({
               }`}
             >
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
         <div className="mt-auto">

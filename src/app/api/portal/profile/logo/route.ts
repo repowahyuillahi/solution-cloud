@@ -15,6 +15,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import { getSession } from '@/lib/auth';
 import { prismaMaster } from '@/lib/db-master';
 
@@ -28,6 +29,38 @@ const ALLOWED_MIME_TYPES = [
 
 /** Maximum file size: 2MB. */
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
+
+/**
+ * Verify file content matches the claimed MIME type by checking the magic
+ * number (file signature). This prevents attackers from uploading executable
+ * content disguised as an image.
+ */
+function verifyImageSignature(buffer: Buffer, mimeType: string): boolean {
+  if (buffer.length < 8) return false;
+
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (mimeType === 'image/png') {
+    return (
+      buffer[0] === 0x89 &&
+      buffer[1] === 0x50 &&
+      buffer[2] === 0x4e &&
+      buffer[3] === 0x47
+    );
+  }
+
+  // JPEG: FF D8 FF
+  if (mimeType === 'image/jpeg' || mimeType === 'image/jpg') {
+    return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+
+  // SVG: must start with "<?xml" or "<svg" (case-insensitive)
+  if (mimeType === 'image/svg+xml') {
+    const head = buffer.slice(0, 200).toString('utf-8').trimStart().toLowerCase();
+    return head.startsWith('<?xml') || head.startsWith('<svg');
+  }
+
+  return false;
+}
 
 /** Map MIME type to file extension. */
 function getExtension(mimeType: string): string {
@@ -100,6 +133,15 @@ export async function POST(request: NextRequest) {
     // Read file buffer
     const buffer = Buffer.from(await file.arrayBuffer());
 
+    // Verify magic number matches claimed MIME type (anti-spoofing)
+    if (!verifyImageSignature(buffer, file.type)) {
+      return createErrorResponse(
+        ErrorCode.VALIDATION_INVALID_FORMAT,
+        'Konten file tidak sesuai dengan format yang diklaim.',
+        'logo',
+      );
+    }
+
     // Determine save path
     const ext = getExtension(file.type);
     const uploadDir = path.resolve(process.cwd(), 'uploads', tenant.slug);
@@ -123,7 +165,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ logoUrl });
   } catch (error: unknown) {
-    console.error('[POST /api/portal/profile/logo] Unexpected error:', error);
+    logger.error('[POST /api/portal/profile/logo] Unexpected error:', { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan internal server.',

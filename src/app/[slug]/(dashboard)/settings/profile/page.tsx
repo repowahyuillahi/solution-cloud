@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -141,10 +142,13 @@ export default function CompanyProfilePage() {
         <CardContent>
           <div className="flex items-center gap-4">
             {profile.logoUrl && (
-              <img
+              <Image
                 src={profile.logoUrl}
                 alt="Logo"
+                width={64}
+                height={64}
                 className="h-16 w-16 rounded object-contain border"
+                unoptimized
               />
             )}
             <Input

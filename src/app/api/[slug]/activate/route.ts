@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { activateLicenseSchema } from '@/lib/validation';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import { activateDashboard } from '@/services/registration';
 
 export async function POST(
@@ -56,7 +57,7 @@ export async function POST(
 
     return NextResponse.json({ activated: true }, { status: 200 });
   } catch (error: unknown) {
-    console.error(`[POST /api/${slug}/activate] Unexpected error:`, error);
+    logger.error(`[POST /api/${slug}/activate] Unexpected error:`, { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan internal server.',

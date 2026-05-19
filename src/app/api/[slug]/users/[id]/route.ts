@@ -15,6 +15,8 @@ import { requireRole } from '@/lib/rbac';
 import { getTenantDb } from '@/lib/db-tenant';
 import { updateUserPasswordSchema, updateUserRoleSchema } from '@/lib/validation';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
+import { recordAudit } from '@/lib/audit-log';
 import type { SessionData } from '@/types';
 
 export async function PUT(
@@ -29,6 +31,13 @@ export async function PUT(
   const check = requireRole(['Superadmin'])(session.loginAt ? session : null);
   if (!check.allowed) {
     return createErrorResponse(ErrorCode.RBAC_INSUFFICIENT_PERMISSION, 'Akses ditolak.');
+  }
+  // Verify tenant session ownership
+  if (session.tenantSlug !== slug) {
+    return createErrorResponse(
+      ErrorCode.RBAC_CROSS_TENANT_ACCESS,
+      'Akses lintas tenant tidak diizinkan.',
+    );
   }
 
   // Parse request body
@@ -116,7 +125,7 @@ export async function PUT(
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error: unknown) {
-    console.error(`[PUT /api/${slug}/users/${id}] Unexpected error:`, error);
+    logger.error(`[PUT /api/${slug}/users/${id}] Unexpected error:`, { error: error });
     return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Terjadi kesalahan internal server.');
   }
 }
@@ -133,6 +142,13 @@ export async function DELETE(
   const check = requireRole(['Superadmin'])(session.loginAt ? session : null);
   if (!check.allowed) {
     return createErrorResponse(ErrorCode.RBAC_INSUFFICIENT_PERMISSION, 'Akses ditolak.');
+  }
+  // Verify tenant session ownership
+  if (session.tenantSlug !== slug) {
+    return createErrorResponse(
+      ErrorCode.RBAC_CROSS_TENANT_ACCESS,
+      'Akses lintas tenant tidak diizinkan.',
+    );
   }
 
   const userId = parseInt(id, 10);
@@ -151,9 +167,17 @@ export async function DELETE(
 
     await db.user.delete({ where: { id: userId } });
 
+    await recordAudit({
+      tenantSlug: slug,
+      actorId: session.userId ?? null,
+      action: 'user.delete',
+      target: String(userId),
+      details: { username: existing.username, role: existing.role },
+    });
+
     return NextResponse.json({ message: 'User berhasil dihapus.' }, { status: 200 });
   } catch (error: unknown) {
-    console.error(`[DELETE /api/${slug}/users/${id}] Unexpected error:`, error);
+    logger.error(`[DELETE /api/${slug}/users/${id}] Unexpected error:`, { error: error });
     return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Terjadi kesalahan internal server.');
   }
 }

@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { customDomainSchema } from '@/lib/validation';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import { getSession } from '@/lib/auth';
 import { prismaMaster } from '@/lib/db-master';
 
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
         : null,
     });
   } catch (error: unknown) {
-    console.error('[GET /api/portal/domain] Unexpected error:', error);
+    logger.error('[GET /api/portal/domain] Unexpected error:', { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan internal server.',
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
       dnsInstructions: `Tambahkan CNAME record: ${tenant.customDomain} → wflab.web.id`,
     });
   } catch (error: unknown) {
-    console.error('[POST /api/portal/domain] Unexpected error:', error);
+    logger.error('[POST /api/portal/domain] Unexpected error:', { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan internal server.',

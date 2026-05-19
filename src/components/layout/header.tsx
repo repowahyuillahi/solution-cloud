@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 interface HeaderProps {
   companyName?: string;
   logoUrl?: string | null;
@@ -28,10 +30,13 @@ export function Header({
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
           {logoUrl && (
-            <img
+            <Image
               src={logoUrl}
               alt={companyName ?? "Logo"}
+              width={32}
+              height={32}
               className="h-8 w-8 rounded object-contain"
+              unoptimized
             />
           )}
           {companyName && (

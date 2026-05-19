@@ -13,6 +13,7 @@ import { sessionOptions } from '@/lib/auth';
 import { requireRole } from '@/lib/rbac';
 import { getTenantDb } from '@/lib/db-tenant';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import type { SessionData } from '@/types';
 
 export async function PUT(
@@ -32,6 +33,13 @@ export async function PUT(
   const check = requireRole(['Superadmin', 'HRD'])(session.loginAt ? session : null);
   if (!check.allowed) {
     return createErrorResponse(ErrorCode.RBAC_INSUFFICIENT_PERMISSION, 'Akses ditolak.');
+  }
+  // Verify tenant session ownership
+  if (session.tenantSlug !== slug) {
+    return createErrorResponse(
+      ErrorCode.RBAC_CROSS_TENANT_ACCESS,
+      'Akses lintas tenant tidak diizinkan.',
+    );
   }
 
   // Parse request body
@@ -110,7 +118,7 @@ export async function PUT(
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error: unknown) {
-    console.error(`[PUT /api/${slug}/employees/${id}] Unexpected error:`, error);
+    logger.error(`[PUT /api/${slug}/employees/${id}] Unexpected error:`, { error: error });
     return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Terjadi kesalahan internal server.');
   }
 }
@@ -133,6 +141,13 @@ export async function DELETE(
   if (!check.allowed) {
     return createErrorResponse(ErrorCode.RBAC_INSUFFICIENT_PERMISSION, 'Akses ditolak.');
   }
+  // Verify tenant session ownership
+  if (session.tenantSlug !== slug) {
+    return createErrorResponse(
+      ErrorCode.RBAC_CROSS_TENANT_ACCESS,
+      'Akses lintas tenant tidak diizinkan.',
+    );
+  }
 
   try {
     const db = await getTenantDb(slug);
@@ -148,7 +163,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error: unknown) {
-    console.error(`[DELETE /api/${slug}/employees/${id}] Unexpected error:`, error);
+    logger.error(`[DELETE /api/${slug}/employees/${id}] Unexpected error:`, { error: error });
     return createErrorResponse(ErrorCode.SERVER_INTERNAL_ERROR, 'Terjadi kesalahan internal server.');
   }
 }

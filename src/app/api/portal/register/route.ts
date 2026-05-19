@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { registrationSchema } from '@/lib/validation';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import { register, RegistrationError } from '@/services/registration';
 import type { RegistrationResult } from '@/types';
 
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Unexpected error
-    console.error('[POST /api/portal/register] Unexpected error:', error);
+    logger.error('[POST /api/portal/register] Unexpected error:', { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan internal server.',

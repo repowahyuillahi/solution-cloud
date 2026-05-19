@@ -20,6 +20,7 @@ import { sessionOptions } from '@/lib/auth';
 import { requireRole } from '@/lib/rbac';
 import { reportFilterSchema } from '@/lib/validation';
 import { createErrorResponse, ErrorCode } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import { resolveBySlug } from '@/lib/tenant-resolver';
 import { generateReport } from '@/services/report-generator';
 import type { SessionData } from '@/types';
@@ -80,7 +81,7 @@ export async function GET(
     const records = await generateReport(slug, parsed.data);
     return NextResponse.json(records, { status: 200 });
   } catch (error: unknown) {
-    console.error(`[GET /api/${slug}/reports] Unexpected error:`, error);
+    logger.error(`[GET /api/${slug}/reports] Unexpected error:`, { error: error });
     return createErrorResponse(
       ErrorCode.SERVER_INTERNAL_ERROR,
       'Terjadi kesalahan saat membuat laporan.',

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -151,10 +152,13 @@ export default function PortalProfilePage() {
               <Label>Logo Perusahaan</Label>
               <div className="flex items-center gap-4">
                 {profile.logoUrl ? (
-                  <img
+                  <Image
                     src={profile.logoUrl}
                     alt="Logo"
+                    width={64}
+                    height={64}
                     className="h-16 w-16 rounded-md border object-contain"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex h-16 w-16 items-center justify-center rounded-md border bg-muted">

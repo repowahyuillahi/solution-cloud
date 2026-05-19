@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'feat/**', 'fix/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build and Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma clients
+        run: |
+          npx prisma generate --config=prisma.master.config.ts
+          npx prisma generate --config=prisma.tenant.config.ts
+
+      - name: Build
+        env:
+          SESSION_SECRET: ci_dummy_secret_for_build_only_at_least_32_chars
+        run: npm run build
+
+      - name: Lint
+        run: npm run lint

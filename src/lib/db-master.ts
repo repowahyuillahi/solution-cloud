@@ -80,3 +80,31 @@ if (process.env.NODE_ENV !== "production") {
 export function getMasterDb(): PrismaClient {
   return prismaMaster;
 }
+
+// ---------------------------------------------------------------------------
+// Graceful shutdown
+// ---------------------------------------------------------------------------
+
+// Registered on first import. Side-effect-only — keeps node-only code paths
+// out of the instrumentation hook (which can't bundle native modules).
+type GlobalHandlers = typeof globalThis & { __shutdownRegistered?: boolean };
+const _g = globalThis as GlobalHandlers;
+if (!_g.__shutdownRegistered && typeof process !== "undefined" && process.on) {
+  _g.__shutdownRegistered = true;
+
+  const shutdown = async (signal: string) => {
+    // eslint-disable-next-line no-console
+    console.log(`[shutdown] Received ${signal}, closing connections...`);
+    try {
+      await prismaMaster.$disconnect();
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line no-console
+    console.log("[shutdown] Done.");
+    process.exit(0);
+  };
+
+  process.on("SIGTERM", () => void shutdown("SIGTERM"));
+  process.on("SIGINT", () => void shutdown("SIGINT"));
+}
